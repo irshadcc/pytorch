@@ -1,19 +1,13 @@
+import os
 import torch
 
-class MyModule(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.linear1 = torch.nn.Linear(10, 5)
-        self.linear2 = torch.nn.Linear(10, 5)
+# Define two tensors
+x = torch.tensor([1,2], requires_grad=False, dtype=torch.float32)
+w = torch.tensor([3,4], requires_grad=True, dtype=torch.float32)
 
-    def forward(self, x, use_linear1: bool):
-        if use_linear1:
-            return self.linear1(x)
-        else:
-            return self.linear2(x)
-
-model = MyModule()
-example_input = torch.randn(1, 10)
-
-# Exporting for use_linear1 = True
-exported_model_linear1 = torch.export.export(model, (example_input, True))
+# Add the tensors
+result_tensor = torch.add(x, w)
+sum_tensor = result_tensor.sum()
+sum_tensor.backward()
+print(x.grad)
+print(w.grad)
