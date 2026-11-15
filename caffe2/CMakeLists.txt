@@ -882,6 +882,18 @@ else()
 endif()
 
 
+option(USE_ABI_DEBUGINFO "Retain type information for stable ABI analysis" OFF)
+if(USE_ABI_DEBUGINFO)
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(FATAL_ERROR "USE_ABI_DEBUGINFO requires Linux")
+  endif()
+  foreach(source IN LISTS Caffe2_CPU_SRCS Caffe2_GPU_SRCS GENERATED_CXX_TORCH_CUDA)
+    if(source MATCHES "/(shim[^/]*|c_shim[^/]*)\\.cpp$")
+      set_property(SOURCE "${source}" APPEND PROPERTY COMPILE_OPTIONS -g -gdwarf-4)
+    endif()
+  endforeach()
+endif()
+
 if(NOT BUILD_LIBTORCHLESS)
 add_library(torch_cpu ${Caffe2_CPU_SRCS})
 if(HAVE_SOVERSION)

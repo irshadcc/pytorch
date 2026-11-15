@@ -468,6 +468,7 @@ jobs:
       - job-filter
     with:
       runner_prefix: "${{ needs.get-label-type.outputs.label-type }}"
+      abi-debuginfo: true
       build-environment: linux-jammy-cuda13.2-cudnn9-py3.11-clang20
       docker-image-name: ci-image:pytorch-linux-jammy-cuda13.2-cudnn9-py3.11-clang20
       ci-docker-hash: ${{ needs.get-label-type.outputs.ci-docker-hash }}
@@ -596,3 +597,7 @@ jobs:
       python-version: "3.13"
       compiler: clang21
     secrets: inherit
+
+  stable-abi-check:
+    needs: linux-jammy-cuda13_2-cudnn9-py3_11-clang20-build
+    uses: ./.github/workflows/_stable-abi.yml

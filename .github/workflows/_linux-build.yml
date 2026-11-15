@@ -17,6 +17,11 @@ on:
         type: string
         default: ""
         description: Git tree hash of .ci/docker, used to construct docker image tags.
+      abi-debuginfo:
+        required: false
+        type: boolean
+        default: false
+        description: Retain DWARF for stable C shims and upload their libraries.
       build-generates-artifacts:
         required: false
         type: boolean
@@ -191,7 +196,7 @@ jobs:
       - name: Check if can use old whl build
         id: use-old-whl
         uses: pytorch/pytorch/.github/actions/reuse-old-whl@main
-        if: ${{ inputs.allow-reuse-old-whl }}
+        if: ${{ inputs.allow-reuse-old-whl && !inputs.abi-debuginfo }}
         with:
           build-environment: ${{ inputs.build-environment }}
           run-id: ${{ github.run_id }}
@@ -225,6 +230,7 @@ jobs:
         if: (steps.filter.outputs.is-test-matrix-empty == 'False' || inputs.test-matrix == '') && steps.use-old-whl.outputs.reuse != 'true'
         id: build
         env:
+          USE_ABI_DEBUGINFO: ${{ inputs.abi-debuginfo && '1' || '0' }}
           BUILD_ENVIRONMENT: ${{ inputs.build-environment }}
           BRANCH: ${{ steps.setup-linux.outputs.branch }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -246,6 +252,17 @@ jobs:
           .ci/pytorch/build.sh
           END_TIME=$(date +%s)
           echo "build_time=$((END_TIME - START_TIME))" >> "$GITHUB_OUTPUT"
+
+      - name: Upload stable ABI libraries
+        if: inputs.abi-debuginfo && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: stable-abi-libraries
+          path: |
+            build/lib/libtorch_cpu.so
+            build/lib/libtorch_cuda.so
+          if-no-files-found: error
+          retention-days: 2
 
       - name: Archive artifacts into zip
         if: inputs.build-generates-artifacts && steps.build.outcome != 'skipped' && steps.use-old-whl.outputs.reuse != 'true'

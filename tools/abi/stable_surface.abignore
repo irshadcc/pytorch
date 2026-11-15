@@ -1,0 +1,8 @@
+# Filter at read time so unrelated C++ interfaces are not analyzed.
+[suppress_function]
+  symbol_name_not_regexp = ^(aoti_torch_|torch_)
+  drop = yes
+
+[suppress_variable]
+  symbol_name_regexp = .*
+  drop = yes
